@@ -1,37 +1,19 @@
-// db/conexao.js
-const mysql = require('mysql2');
+const mysql = require("mysql2");
 
-let conexao;
+const conexao = mysql.createConnection({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT
+});
 
-function handleDisconnect() {
-  conexao = mysql.createConnection({
-    host: process.env.DB_HOST,       // host do banco
-    user: process.env.DB_USER,       // usuário
-    password: process.env.DB_PASS,   // senha
-    database: process.env.DB_NAME    // nome do banco
-  });
+conexao.connect(err => {
+  if (err) {
+    console.error(" Erro ao conectar MySQL:", err.message);
+  } else {
+    console.log(" MySQL conectado com sucesso no banco:", process.env.DB_NAME);
+  }
+});
 
-  conexao.connect(err => {
-    if (err) {
-      console.error('Erro ao conectar ao MySQL:', err);
-      setTimeout(handleDisconnect, 2000); // tenta reconectar em 2s
-    } else {
-      console.log('Conectado ao MySQL!');
-    }
-  });
-
-  conexao.on('error', err => {
-    if (err.code === 'PROTOCOL_CONNECTION_LOST') {
-      console.warn('Conexão perdida. Reconectando...');
-      handleDisconnect(); // reconecta automaticamente
-    } else {
-      throw err;
-    }
-  });
-}
-
-handleDisconnect();
-
-// exporta uma função para pegar a conexão atual
-module.exports = () => conexao;
-
+module.exports = conexao;
