@@ -9,10 +9,14 @@ const path = require('path');
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use(session({
-  secret: '123456789', 
+  secret: process.env.SESSION_SECRET,
   resave: false,
-  saveUninitialized: true,
-  cookie: { secure: false }
+  saveUninitialized: false,
+  cookie: { 
+    secure: true, 
+    httpOnly: true, 
+    maxAge: 1000 * 60 * 60 
+  }
 }));
 
 app.use(cors());
