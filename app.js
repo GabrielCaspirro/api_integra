@@ -12,10 +12,11 @@ app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
-  cookie: { 
+  cookie: {
     secure: true, 
-    httpOnly: true, 
-    maxAge: 1000 * 60 * 60 
+    sameSite: "none", 
+    httpOnly: true,
+    maxAge: 1000 * 60 * 60
   }
 }));
 
