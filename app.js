@@ -1,3 +1,4 @@
+require("dotenv").config();
 const apiRoutes = require('./routes/rotas');
 const express = require('express');
 const session = require('express-session');
@@ -5,11 +6,10 @@ const cors = require("cors");
 const app = express();
 const path = require('path');
 
-// Servir pasta de uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use(session({
-  secret: process.env.SESSION_SECRET,
+  secret: process.env.SESSION_SECRET || "segredo_teste",
   resave: false,
   saveUninitialized: false,
   cookie: {
