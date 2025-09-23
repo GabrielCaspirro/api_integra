@@ -1,8 +1,11 @@
 const conexao = require('../db/conexao');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+
+const segredo = process.env.JWT_SECRET || 'segredo_super_secreto';
 
 function Login(req, res) {
-    const {tipo, email, senha } = req.body;
+    const { tipo, email, senha } = req.body;
 
     if (!tipo) {
         return res.status(400).json({ erro: 'Campo tipo é obrigatório.' });
@@ -43,14 +46,67 @@ function Login(req, res) {
             return res.status(401).json({ erro: 'Senha incorreta.' });
         }
 
-        req.session.usuarioLogado = {
-            id: usuario[campoId],
-            tipo: tipo,
-            email: usuario.email
-        };
+        // Cria o token
+        const token = jwt.sign(
+            {
+                id: usuario[campoId],
+                tipo: tipo,
+                email: usuario.email
+            },
+            segredo,
+            { expiresIn: '2h' }
+        );
 
-        return res.json({ mensagem: 'Login realizado com sucesso!', usuario: req.session.usuarioLogado });
+        return res.json({ mensagem: 'Login realizado com sucesso!', token });
     });
 }
 
-module.exports = { Login };
+function Perfil(req, res) {
+    try {
+        const authHeader = req.headers.authorization;
+
+        if (!authHeader) {
+        return res.status(401).json({ erro: "Token não fornecido." });
+        }
+
+        const [, token] = authHeader.split(" ");
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET); 
+        const { id, tipo } = decoded;
+
+        const campoId = {
+        administrador: "id_administrador",
+        palestrante: "id",
+        instituicao: "id",
+        empresa: "id_empresa",
+        aluno: "id_aluno",
+        coordenador: "id_coordenador"
+        }[tipo];
+
+        const sql = `SELECT * FROM ${tipo} WHERE ${campoId} = ?`;
+
+        conexao.query(sql, [id], (err, resultado) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ erro: "Erro ao buscar perfil." });
+        }
+
+        if (resultado.length === 0) {
+            return res.status(404).json({ erro: "Usuário não encontrado." });
+        }
+
+        const usuario = resultado[0];
+
+        res.json({
+            id: usuario[campoId],
+            tipo,
+            email: usuario.email,
+            nome: usuario.nome || "Usuário"
+        });
+        });
+    } catch (err) {
+        return res.status(401).json({ erro: "Token inválido." });
+    }
+}
+
+module.exports = { Login, Perfil };

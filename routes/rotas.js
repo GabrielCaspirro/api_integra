@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const upload = require('../middlewares/upload');
-
+const { autenticarToken } = require('../middlewares/auth');
 
 const UsuarioController = require('../components/Usuarios/UsuarioController');
 const AlunoController = require('../components/Usuarios/AlunoController');
@@ -112,8 +112,15 @@ router.delete('/delete-endereco', (req, res) => {
 
 //USUARIOS
 
-router.get('/login', (req, res) => {
-    UsuarioController.UsuarioLogado(req, res);
+router.get('/verificar-token', autenticarToken, (req, res) => {
+    res.json({
+        mensagem: 'Acesso autorizado!',
+        usuario: req.usuario
+    });
+});
+
+router.get('/perfil', (req, res) => {
+    LoginController.Perfil(req, res);
 });
 
 router.get('/logout', (req, res) => {
