@@ -2,9 +2,9 @@ const conexao = require('../db/conexao');
 const cepController = require("../components/CepController");
 
 async function InserirEvento(req, res) {
-    const { nome, descricao, data, horario_inicio, horario_final, valor, tipo, cep } = req.body;
+    const { nome, descricao, data, horario_inicio, horario_final, valor, tipo, cep, id_empresa, id_palestrante } = req.body;
 
-    if (!nome || !descricao || !data || !horario_inicio || !horario_final || !valor || !tipo || !cep) {
+    if (!nome || !descricao || !data || !horario_inicio || !horario_final || !valor || !tipo || !cep || (!id_empresa && !id_palestrante)) {
         return res.status(400).json({ erro: 'Campos obrigatórios não preenchidos.' });
     }
 
@@ -28,24 +28,25 @@ async function InserirEvento(req, res) {
             const id_endereco = resultadoEndereco.insertId;
 
             const sqlEvento = `
-            INSERT INTO evento (nome, descricao, data, horario_inicio, horario_saida, valor, tipo, id_endereco, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Pendente')
+              INSERT INTO evento 
+              (nome, descricao, data, horario_inicio, horario_saida, valor, tipo, id_endereco, status, id_empresa, id_palestrante)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Pendente', ?, ?)
             `;
 
             conexao.query(
-                sqlEvento,
-                [nome, descricao, data, horario_inicio, horario_final, valor, tipo, id_endereco],
-                (err2, resultadoEvento) => {
-                    if (err2) {
-                    console.error('Erro ao inserir evento:', err2);
-                    return res.status(500).json({ erro: 'Erro ao cadastrar evento.' });
-                    }
-
-                    res.status(201).json({
-                    mensagem: 'Evento cadastrado com sucesso.',
-                    id_evento: resultadoEvento.insertId
-                    });
+              sqlEvento,
+              [nome, descricao, data, horario_inicio, horario_final, valor, tipo, id_endereco, id_empresa || null, id_palestrante || null],
+              (err2, resultadoEvento) => {
+                if (err2) {
+                  console.error('Erro ao inserir evento:', err2);
+                  return res.status(500).json({ erro: 'Erro ao cadastrar evento.' });
                 }
+
+                res.status(201).json({
+                  mensagem: 'Evento cadastrado com sucesso.',
+                  id_evento: resultadoEvento.insertId
+                });
+              }
             );
         }
     );
@@ -86,4 +87,30 @@ function GetEventos(req, res){
   });
 }
 
-module.exports = { GetEventos, InserirEvento }
+async function VincularEventoEmpresaCoordenador(req, res) {
+  const { id_evento, id_coordenador, status, horario, observacao } = req.body;
+
+  if (!id_evento || !id_coordenador) {
+    return res.status(400).json({ erro: 'Campos obrigatórios não preenchidos.' });
+  }
+
+  const sql = `
+    INSERT INTO evento_empresa_coordenador (id_evento, id_coordenador, status, observacao, horario_escolhido)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `;
+
+  conexao.query(sql, [id_evento, id_coordenador, status, observacao, horario], (err, resultado) => {
+    if (err) {
+      console.error('Erro ao vincular evento com empresa/coordenador:', err);
+      return res.status(500).json({ erro: 'Erro ao vincular evento.' });
+    }
+
+    return res.status(201).json({
+      mensagem: 'Evento vinculado à empresa e coordenador com sucesso.',
+      id_vinculo: resultado.insertId
+    });
+  });
+}
+
+
+module.exports = { GetEventos, InserirEvento, VincularEventoEmpresaCoordenador }

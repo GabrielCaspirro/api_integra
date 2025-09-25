@@ -145,4 +145,8 @@ router.post('/inserir-evento', (req, res) => {
     EventoController.InserirEvento(req, res);
 })
 
+router.post('/evento-relacao', (req, res) => {
+    EventoController.VincularEventoEmpresaCoordenador(req, res);
+})
+
 module.exports = router;
