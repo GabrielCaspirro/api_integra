@@ -88,8 +88,7 @@ async function InserirEvento(req, res) {
 
 
 function GetEventos(req, res) {
-  let { mes, tipo, status, confirmado } = req.query; // "confirmado" pode ser true/false
-  let { id_empresa } = req.body; // vem no body
+  const { mes, tipo, status, confirmado, id_empresa } = req.query; // "confirmado" pode ser true/false
 
   let sql = "SELECT * FROM evento WHERE 1=1"; 
   let params = [];

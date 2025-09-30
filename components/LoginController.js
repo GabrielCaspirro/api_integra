@@ -66,43 +66,62 @@ function Perfil(req, res) {
         const authHeader = req.headers.authorization;
 
         if (!authHeader) {
-        return res.status(401).json({ erro: "Token não fornecido." });
+            return res.status(401).json({ erro: "Token não fornecido." });
         }
 
         const [, token] = authHeader.split(" ");
-
         const decoded = jwt.verify(token, process.env.JWT_SECRET); 
         const { id, tipo } = decoded;
 
+        // Mapeando o campo do ID
         const campoId = {
-        administrador: "id_administrador",
-        palestrante: "id",
-        instituicao: "id",
-        empresa: "id_empresa",
-        aluno: "id_aluno",
-        coordenador: "id_coordenador"
+            administrador: "id_administrador",
+            palestrante: "id",
+            instituicao: "id",
+            empresa: "id_empresa",
+            aluno: "id_aluno",
+            coordenador: "id_coordenador"
         }[tipo];
 
-        const sql = `SELECT * FROM ${tipo} WHERE ${campoId} = ?`;
+        // Mapeando o campo da logo, se existir
+        const campoLogo = {
+            administrador: null,
+            palestrante: "logo",
+            instituicao: "logo",
+            empresa: "logo",
+            aluno: "foto",
+            coordenador: null
+        }[tipo];
+
+        // Monta o SELECT dinamicamente
+        const selectCampos = ["email", "nome"];
+        if (campoLogo) selectCampos.push(campoLogo);
+
+        const sql = `SELECT ${selectCampos.join(", ")} FROM ${tipo} WHERE ${campoId} = ?`;
 
         conexao.query(sql, [id], (err, resultado) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({ erro: "Erro ao buscar perfil." });
-        }
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ erro: "Erro ao buscar perfil." });
+            }
 
-        if (resultado.length === 0) {
-            return res.status(404).json({ erro: "Usuário não encontrado." });
-        }
+            if (resultado.length === 0) {
+                return res.status(404).json({ erro: "Usuário não encontrado." });
+            }
 
-        const usuario = resultado[0];
+            const usuario = resultado[0];
 
-        res.json({
-            id: usuario[campoId],
-            tipo,
-            email: usuario.email,
-            nome: usuario.nome || "Usuário"
-        });
+            // Monta o objeto de retorno
+            const retorno = {
+                id: usuario[campoId],
+                tipo,
+                email: usuario.email,
+                nome: usuario.nome || "Usuário"
+            };
+
+            if (campoLogo) retorno.logo = usuario[campoLogo];
+
+            res.json(retorno);
         });
     } catch (err) {
         return res.status(401).json({ erro: "Token inválido." });
