@@ -59,7 +59,8 @@ async function InserirEvento(req, res) {
             nome, 
             descricao, 
             data, 
-            JSON.stringify(opcoes_horarios), // salva como JSON
+            JSON.stringify(opcoes_horarios), // stringify só aqui
+            null,
             valor, 
             tipo, 
             id_endereco, 

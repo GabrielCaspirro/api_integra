@@ -94,7 +94,7 @@ function Perfil(req, res) {
         }[tipo];
 
         // Monta o SELECT dinamicamente
-        const selectCampos = ["email", "nome"];
+        const selectCampos = [campoId, "email", "nome"];
         if (campoLogo) selectCampos.push(campoLogo);
 
         const sql = `SELECT ${selectCampos.join(", ")} FROM ${tipo} WHERE ${campoId} = ?`;
