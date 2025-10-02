@@ -218,8 +218,13 @@ function GetSolicitacoesEmpresa(req, res) {
   }
 
   const query = `
-    SELECT sp.id, sp.status, sp.data_solicitacao, 
-           p.id, p.nome as nome_palestrante, p.email as email_palestrante
+    SELECT 
+    sp.id AS id_solicitacao,
+    sp.status, 
+    sp.data_solicitacao,
+    p.id AS id_palestrante,
+    p.nome AS nome_palestrante, 
+    p.email AS email_palestrante
     FROM solicitacao_palestrante sp
     JOIN palestrante p ON sp.id_palestrante = p.id
     WHERE sp.id_empresa = ?

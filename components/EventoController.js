@@ -146,23 +146,60 @@ async function VincularEventoEmpresaCoordenador(req, res) {
     return res.status(400).json({ erro: 'Campos obrigatórios não preenchidos.' });
   }
 
-  const sql = `
-    INSERT INTO evento_empresa_coordenador (id_evento, id_coordenador, status, observacao, horario_escolhido)
-    VALUES (?, ?, ?, ?, ?, ?)
+  // Inserir vínculo
+  const insertSql = `
+    INSERT INTO evento_coordenador 
+      (id_evento, id_coordenador, status, observacao, horario_escolhido)
+    VALUES (?, ?, ?, ?, ?)
   `;
 
-  conexao.query(sql, [id_evento, id_coordenador, status, observacao, horario], (err, resultado) => {
+  conexao.query(insertSql, [id_evento, id_coordenador, status, observacao || null, horario || null], (err, resultado) => {
     if (err) {
       console.error('Erro ao vincular evento com empresa/coordenador:', err);
       return res.status(500).json({ erro: 'Erro ao vincular evento.' });
     }
 
-    return res.status(201).json({
-      mensagem: 'Evento vinculado à empresa e coordenador com sucesso.',
-      id_vinculo: resultado.insertId
-    });
+    // Mapear status do vínculo para status do evento
+    let statusEvento = null;
+    if (status === "aceito") statusEvento = "Aprovada";
+    else if (status === "recusado") statusEvento = "Cancelada";
+
+    // Atualizar evento
+    let updateFields = [];
+    let updateParams = [];
+
+    if (statusEvento) {
+      updateFields.push('status = ?');
+      updateParams.push(statusEvento);
+    }
+
+    if (horario) {
+      updateFields.push('periodo_escolhido = ?');
+      updateParams.push(horario);
+    }
+
+    if (updateFields.length > 0) {
+      const updateSql = `UPDATE evento SET ${updateFields.join(', ')} WHERE id = ?`;
+      updateParams.push(id_evento);
+
+      conexao.query(updateSql, updateParams, (err2) => {
+        if (err2) {
+          console.error('Erro ao atualizar status do evento:', err2);
+          return res.status(500).json({ erro: 'Erro ao atualizar status do evento.' });
+        }
+
+        return res.status(201).json({
+          mensagem: 'Evento vinculado e atualizado com sucesso.',
+          id_vinculo: resultado.insertId
+        });
+      });
+    } else {
+      return res.status(201).json({
+        mensagem: 'Evento vinculado com sucesso (sem alteração de status).',
+        id_vinculo: resultado.insertId
+      });
+    }
   });
 }
-
 
 module.exports = { GetEventos, InserirEvento, VincularEventoEmpresaCoordenador }

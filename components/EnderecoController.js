@@ -10,6 +10,18 @@ function GetAllEnderecos(res){
   });
 }
 
+function GetEnderecoByID(req, res){
+    const { id } = req.body;
+
+    conexao.query('SELECT * FROM endereco WHERE id_endereco = ?', [id], (err, resultados) => {
+    if (err) {
+      return res.status(500).json({ erro: 'Erro ao buscar endereço' });
+    }
+
+    res.status(200).json(resultados);
+  });
+}
+
 function AtualizarEndereco(req, res) {
     const { id, tipo, rua, numero, bairro, cidade, estado, cep, complemento } = req.body;
 
@@ -98,4 +110,4 @@ function DeleteEndereco(req, res){
   });
 }
 
-module.exports = { GetAllEnderecos, AtualizarEndereco, DeleteEndereco };
+module.exports = { GetAllEnderecos, GetEnderecoByID, AtualizarEndereco, DeleteEndereco };

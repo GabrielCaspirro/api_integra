@@ -102,6 +102,10 @@ router.get('/enderecos', (req, res) => {
     EnderecoController.GetAllEnderecos(res);
 });
 
+router.post('/endereco', (req, res) => {
+    EnderecoController.GetEnderecoByID(req, res);
+});
+
 router.put('/atualizar-endereco', (req, res) => {
     EnderecoController.AtualizarEndereco(req, res);
 });
