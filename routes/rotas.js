@@ -153,4 +153,8 @@ router.post('/evento-relacao', (req, res) => {
     EventoController.VincularEventoEmpresaCoordenador(req, res);
 })
 
+router.get('/eventos-aluno', (req, res) => {
+    EventoController.GetEventosAluno(req, res);
+})
+
 module.exports = router;

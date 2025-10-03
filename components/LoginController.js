@@ -89,7 +89,7 @@ function Perfil(req, res) {
             palestrante: "logo",
             instituicao: "logo",
             empresa: "logo",
-            aluno: "foto",
+            aluno: null,
             coordenador: null
         }[tipo];
 

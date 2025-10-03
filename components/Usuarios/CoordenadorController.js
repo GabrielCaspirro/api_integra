@@ -15,34 +15,51 @@ function GetAllCoordenadores(res){
     res.json(coordenadorSemSenha);
   });
 }
+  function InserirCoordenador(req, res) {
+    const { matricula, nome, email, senha, telefone, id_instituicao } = req.body;
 
-function InserirCoordenador(req, res) {
-    const { matricula, nome, email, senha } = req.body;
-  
-    if (!matricula || !nome || !email || !senha) {
+    if (!matricula || !nome || !email || !senha || !id_instituicao) {
       return res.status(400).json({ erro: 'Campos obrigatórios faltando.' });
     }
-  
-    const sql = `
-      INSERT INTO coordenador (matricula, nome, email, senha)
-      VALUES (?, ?, ?, ?)
+
+    const sqlCoordenador = `
+      INSERT INTO coordenador (matricula, nome, email, senha, telefone)
+      VALUES (?, ?, ?, ?, ?)
     `;
-  
+
     bcrypt.hash(senha, 10, (err, hash) => {
       if (err) return res.status(500).json({ erro: 'Erro ao criptografar senha.' });
-      conexao.query(sql, [matricula, nome, email, hash], (err, resultado) => {
+
+      conexao.query(sqlCoordenador, [matricula, nome, email, hash, telefone], (err, resultado) => {
+        if (err) {
+          console.error('Erro ao inserir coordenador:', err);
+          return res.status(500).json({ erro: 'Erro ao inserir coordenador.' });
+        }
+
+        const id_coordenador = resultado.insertId;
+
+        // agora insere o vínculo na tabela coordenador_instituicao
+        const sqlVinculo = `
+          INSERT INTO coordenador_instituicao (id_coordenador, id_instituicao)
+          VALUES (?, ?)
+        `;
+
+        conexao.query(sqlVinculo, [id_coordenador, id_instituicao], (err) => {
           if (err) {
-              console.error('Erro ao inserir coordenador:', err);
-              return res.status(500).json({ erro: 'Erro ao inserir coordenador.' });
+            console.error('Erro ao inserir coordenador_instituicao:', err);
+            return res.status(500).json({ erro: 'Erro ao vincular coordenador à instituição.' });
           }
-  
+
           res.status(201).json({
-          mensagem: 'coordenador cadastrado com sucesso.',
-          id_coordenador: resultado.insertId
+            mensagem: 'Coordenador cadastrado e vinculado com sucesso.',
+            id_coordenador,
+            id_instituicao
           });
-      }); 
-    })
+        });
+      });
+    });
   }
+
 
   function AtualizarCoordenador(req, res) {
     const { id_coordenador, matricula, nome, email, telefone} = req.body;

@@ -139,6 +139,63 @@ function GetEventos(req, res) {
   });
 }
 
+function GetEventosAluno(req, res) {
+  const { id_aluno } = req.query; // vamos identificar o aluno logado
+
+  if (!id_aluno) {
+    return res.status(400).json({ erro: "É necessário informar o id_aluno" });
+  }
+
+  // buscamos a instituição do aluno
+  const sqlInstituicao = `
+    SELECT id_instituicao FROM aluno WHERE id_aluno = ?
+  `;
+
+  conexao.query(sqlInstituicao, [id_aluno], (err, resultado) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ erro: "Erro ao buscar instituição do aluno" });
+    }
+
+    if (resultado.length === 0) {
+      return res.status(404).json({ erro: "Aluno não encontrado" });
+    }
+
+    const id_instituicao = resultado[0].id_instituicao;
+
+    // agora buscamos os eventos confirmados daquela instituição
+    const sqlEventos = `
+      SELECT e.*, c.nome AS nome_coordenador, i.nome AS nome_instituicao
+      FROM evento e
+      INNER JOIN evento_coordenador ec ON e.id = ec.id_evento
+      INNER JOIN coordenador c ON ec.id_coordenador = c.id_coordenador
+      INNER JOIN coordenador_instituicao ci ON c.id_coordenador = ci.id_coordenador
+      INNER JOIN instituicao i ON ci.id_instituicao = i.id
+      WHERE e.periodo_escolhido IS NOT NULL
+        AND ci.id_instituicao = ?
+      ORDER BY e.data ASC
+    `;
+
+    conexao.query(sqlEventos, [id_instituicao], (err, eventos) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ erro: "Erro ao buscar eventos" });
+      }
+
+      eventos.forEach(evento => {
+        try {
+          evento.opcoes_horarios = JSON.parse(evento.opcoes_horarios);
+        } catch (e) {
+          evento.opcoes_horarios = [];
+        }
+      });
+
+      res.status(200).json(eventos);
+    });
+  });
+}
+
+
 async function VincularEventoEmpresaCoordenador(req, res) {
   const { id_evento, id_coordenador, status, horario, observacao } = req.body;
 
@@ -202,4 +259,4 @@ async function VincularEventoEmpresaCoordenador(req, res) {
   });
 }
 
-module.exports = { GetEventos, InserirEvento, VincularEventoEmpresaCoordenador }
+module.exports = { GetEventos, GetEventosAluno, InserirEvento, VincularEventoEmpresaCoordenador }
