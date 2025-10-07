@@ -133,5 +133,18 @@ function AtualizarInstituicao(req, res) {
     }
 }
   
+function GetTurmasById(req, res) {
+    const { id } = req.params;
 
-module.exports = {GetAllInstituicoes, InserirInstituicao, AtualizarInstituicao};
+    const sql = "SELECT turmas FROM coordenador WHERE id_coordenador = ?";
+    conexao.query(sql, [id], (err, resultados) => {
+        if (err) return res.status(500).json({ erro: "Erro ao buscar turmas" });
+        if (resultados.length === 0) return res.json([]);
+
+        // A coluna turmas é uma string separada por vírgula
+        const turmas = resultados[0].turmas.split(",").map(t => t.trim());
+        res.json(turmas);
+    });
+}
+
+module.exports = {GetAllInstituicoes, InserirInstituicao, AtualizarInstituicao, GetTurmasById};

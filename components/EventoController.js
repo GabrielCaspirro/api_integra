@@ -195,22 +195,56 @@ function GetEventosAluno(req, res) {
   });
 }
 
+function GetEventosAceitosCoordenador(req, res) {
+  const { id_coordenador } = req.params;
+
+  if (!id_coordenador) {
+    return res.status(400).json({ erro: "ID do coordenador não fornecido." });
+  }
+
+  const sql = `
+    SELECT 
+      e.*, 
+      ec.status AS status_coordenador,
+      ec.observacao,
+      ec.horario_escolhido,
+      ec.turmas
+    FROM evento_coordenador ec
+    INNER JOIN evento e ON ec.id_evento = e.id
+    WHERE ec.id_coordenador = ? AND ec.status = 'Aceito';
+  `;
+
+  conexao.query(sql, [id_coordenador], (err, resultados) => {
+    if (err) {
+      console.error("Erro ao buscar eventos aceitos do coordenador:", err);
+      return res.status(500).json({ erro: "Erro ao buscar eventos do coordenador." });
+    }
+
+    // Ajusta os nomes dos tipos de evento para exibição
+    resultados.forEach(evento => {
+      if (evento.tipo === "visita_tecnica") evento.tipo = "Visita Técnica";
+      else if (evento.tipo === "palestra") evento.tipo = "Palestra";
+    });
+
+    res.status(200).json(resultados);
+  });
+}
 
 async function VincularEventoEmpresaCoordenador(req, res) {
-  const { id_evento, id_coordenador, status, horario, observacao } = req.body;
+  const { id_evento, id_coordenador, status, horario, observacao, turmas } = req.body;
 
-  if (!id_evento || !id_coordenador) {
+  if (!id_evento || !id_coordenador || !turmas) {
     return res.status(400).json({ erro: 'Campos obrigatórios não preenchidos.' });
   }
 
   // Inserir vínculo
   const insertSql = `
     INSERT INTO evento_coordenador 
-      (id_evento, id_coordenador, status, observacao, horario_escolhido)
-    VALUES (?, ?, ?, ?, ?)
+      (id_evento, id_coordenador, status, observacao, horario_escolhido, turmas)
+    VALUES (?, ?, ?, ?, ?, ?)
   `;
 
-  conexao.query(insertSql, [id_evento, id_coordenador, status, observacao || null, horario || null], (err, resultado) => {
+  conexao.query(insertSql, [id_evento, id_coordenador, status, observacao || null, horario || null, turmas], (err, resultado) => {
     if (err) {
       console.error('Erro ao vincular evento com empresa/coordenador:', err);
       return res.status(500).json({ erro: 'Erro ao vincular evento.' });
@@ -259,4 +293,29 @@ async function VincularEventoEmpresaCoordenador(req, res) {
   });
 }
 
-module.exports = { GetEventos, GetEventosAluno, InserirEvento, VincularEventoEmpresaCoordenador }
+function GetAlunosInstituicaoCoordenador(req, res) {
+  const { id_coordenador } = req.params;
+
+  if (!id_coordenador) {
+    return res.status(400).json({ erro: "ID do coordenador não fornecido." });
+  }
+
+  const sql = `
+    SELECT a.* 
+    FROM aluno a
+    INNER JOIN coordenador_instituicao ic ON ic.id_instituicao = a.id_instituicao
+    WHERE ic.id_coordenador = ?;
+  `;
+
+  conexao.query(sql, [id_coordenador], (err, resultados) => {
+    if (err) {
+      console.error("Erro ao buscar alunos da instituição do coordenador:", err);
+      return res.status(500).json({ erro: "Erro ao buscar alunos." });
+    }
+
+    res.status(200).json(resultados);
+  });
+}
+
+
+module.exports = { GetEventos, GetEventosAluno, InserirEvento, VincularEventoEmpresaCoordenador, GetEventosAceitosCoordenador, GetAlunosInstituicaoCoordenador }

@@ -19,6 +19,23 @@ function GetAllEmpresas(res){
   });
 }
 
+function GetEmpresaById(req, res){
+    const { id } = req.params;
+
+    conexao.query('SELECT * FROM empresa WHERE id_empresa = ?', [id], (err, resultados) => {
+    if (err) {
+      return res.status(500).json({ erro: 'Erro ao buscar empresas' });
+    }
+    
+    const empresaSemSenha = resultados.map(empresa => {
+      delete empresa.senha;
+      return empresa;
+    });
+
+    res.json(empresaSemSenha);
+  });
+}
+
 function InserirEmpresa(req, res) {
   const { nome, email, telefone, setor, cnpj, cep } = req.body;
   const logoFile = req.file; // multer coloca o arquivo aqui
@@ -241,4 +258,4 @@ function GetSolicitacoesEmpresa(req, res) {
   });
 }
   
-module.exports = {GetAllEmpresas, InserirEmpresa, AtualizarEmpresa, ResponderSolicitacao, GetSolicitacoesEmpresa}
+module.exports = {GetAllEmpresas, GetEmpresaById, InserirEmpresa, AtualizarEmpresa, ResponderSolicitacao, GetSolicitacoesEmpresa}

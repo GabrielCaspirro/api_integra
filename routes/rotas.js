@@ -38,8 +38,24 @@ router.get('/coordenadores', (req, res) => {
     CoordenadorController.GetAllCoordenadores(res);
 });
 
+router.get('/salas/:id_coordenador', (req, res) => {
+    CoordenadorController.getSalasPorCoordenador(req, res);
+});
+
+router.get('/alunos/:modulo_ano', (req, res) => {
+    CoordenadorController.getAlunosPorSala(req, res);
+});
+
+router.get('/alunos-instituicao/:id_coordenador', (req, res) => {
+    EventoController.GetAlunosInstituicaoCoordenador(req, res);
+});
+
 router.post('/inserir-coordenador', (req, res) => {
     CoordenadorController.InserirCoordenador(req, res);
+});
+
+router.get('/coordenador-instituicoes/:id_coordenador', (req, res) => {
+    CoordenadorController.GetInstituicoesPorCoordenador(req, res);
 });
 
 router.put('/atualizar-coordenador', (req, res) => {
@@ -50,6 +66,11 @@ router.put('/atualizar-coordenador', (req, res) => {
 router.get('/empresas', (req, res) => {
     EmpresaController.GetAllEmpresas(res);
 });
+
+router.get('/empresaById/:id', (req, res) => {
+    EmpresaController.GetEmpresaById(req, res);
+});
+
 
 router.get('/solicitacoes/empresa/:id_empresa', EmpresaController.GetSolicitacoesEmpresa);
 
@@ -70,6 +91,14 @@ router.put('/atualizar-empresa', (req, res) => {
 //INSTITUIÇÕES
 router.get('/instituicoes', (req, res) => {
     InstituicaoController.GetAllInstituicoes(res);
+});
+
+router.get('/turmasByInstituicao/:id', (req, res) => {
+    InstituicaoController.GetTurmasById(req, res);
+});
+
+router.get("/eventos-confirmados-coordenador/:id_coordenador", (req, res) => {
+    EventoController.GetEventosAceitosCoordenador(req, res);
 });
 
 router.post('/inserir-instituicao', (req, res) => {

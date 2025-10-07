@@ -118,5 +118,66 @@ function GetAllCoordenadores(res){
     }
   }
 
+  function GetInstituicoesPorCoordenador(req, res) {
+    const { id_coordenador } = req.params;
 
-  module.exports = {GetAllCoordenadores, InserirCoordenador, AtualizarCoordenador}
+    const sql = `
+      SELECT i.* 
+      FROM instituicao i
+      INNER JOIN coordenador_instituicao ci ON i.id = ci.id_instituicao
+      WHERE ci.id_coordenador = ?;
+    `;
+
+    conexao.query(sql, [id_coordenador], (err, resultados) => {
+      if (err) {
+        console.error('Erro ao buscar instituições:', err);
+        return res.status(500).json({ erro: 'Erro ao buscar instituições do coordenador' });
+      }
+
+      if (resultados.length === 0) {
+        return res.status(404).json({ mensagem: 'Nenhuma instituição encontrada para este coordenador' });
+      }
+
+      res.json(resultados);
+    });
+  }
+
+
+  function getSalasPorCoordenador(req, res) {
+    const { id_coordenador } = req.params;
+
+    const sql = 'SELECT turmas FROM coordenador WHERE id_coordenador = ?';
+
+    conexao.query(sql, [id_coordenador], (err, resultado) => {
+      if (err) {
+        console.error('Erro ao buscar salas:', err);
+        return res.status(500).json({ erro: 'Erro ao buscar salas.' });
+      }
+
+      if (resultado.length === 0) {
+        return res.status(404).json({ erro: 'Coordenador não encontrado.' });
+      }
+
+      const turmasString = resultado[0].turmas || '';
+      const salas = turmasString.split(',').map(s => s.trim());
+
+      res.status(200).json(salas);
+    });
+  }
+
+  function getAlunosPorSala(req, res) {
+    const { modulo_ano } = req.params;
+
+    const sql = 'SELECT * FROM aluno WHERE modulo_ano = ?';
+
+    conexao.query(sql, [modulo_ano], (err, resultado) => {
+      if (err) {
+        console.error('Erro ao buscar alunos:', err);
+        return res.status(500).json({ erro: 'Erro ao buscar alunos.' });
+      }
+
+      res.status(200).json(resultado);
+    });
+  }
+
+  module.exports = {GetAllCoordenadores, InserirCoordenador, AtualizarCoordenador, GetInstituicoesPorCoordenador, getSalasPorCoordenador, getAlunosPorSala}
