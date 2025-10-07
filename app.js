@@ -22,7 +22,8 @@ app.use(session({
 
 const allowedOrigins = [
   'http://localhost:3000', 
-  "https://integra-tcc.vercel.app/"
+  "https://integra-tcc.vercel.app/",
+  "https://integra-omega.vercel.app/"
 ];
 
 const corsOptions = {
