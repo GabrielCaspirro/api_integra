@@ -7,7 +7,8 @@ async function InserirEvento(req, res) {
     descricao, 
     data, 
     opcoes_horarios, // lista de opções de horários
-    valor, 
+    valor,
+    max_participantes, 
     tipo, 
     cep, 
     id_empresa, 
@@ -19,7 +20,8 @@ async function InserirEvento(req, res) {
     !descricao || 
     !data || 
     !opcoes_horarios || 
-    !valor || 
+    !valor ||
+    !max_participantes || 
     !tipo || 
     !cep || 
     (!id_empresa && !id_palestrante)
@@ -49,8 +51,8 @@ async function InserirEvento(req, res) {
 
         const sqlEvento = `
           INSERT INTO evento 
-          (nome, descricao, data, opcoes_horarios, periodo_escolhido, valor, tipo, id_endereco, status, id_empresa, id_palestrante)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Pendente', ?, ?)
+          (nome, descricao, data, opcoes_horarios, periodo_escolhido, valor, tipo, id_endereco, status, id_empresa, id_palestrante, max_participantes)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Pendente', ?, ?, ?)
         `;
 
         conexao.query(
@@ -65,7 +67,8 @@ async function InserirEvento(req, res) {
             tipo, 
             id_endereco, 
             id_empresa || null, 
-            id_palestrante || null
+            id_palestrante || null,
+            max_participantes
           ],
           (err2, resultadoEvento) => {
             if (err2) {
